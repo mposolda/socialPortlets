@@ -42,7 +42,6 @@ import org.exoplatform.container.ExoContainerContext;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.security.oauth.common.AccessTokenContext;
-import org.gatein.security.oauth.common.OAuthConstants;
 import org.gatein.security.oauth.common.OAuthProviderType;
 import org.gatein.security.oauth.data.SocialNetworkService;
 import org.gatein.security.oauth.exception.OAuthException;
@@ -56,7 +55,7 @@ public class OAuthPortletFilter implements RenderFilter {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String ATTRIBUTE_ACCESS_TOKEN = "_attrAccessToken";    ;
+    public static final String ATTRIBUTE_ACCESS_TOKEN = "_attrAccessToken";
     public static final String ATTRIBUTE_ERROR_MESSAGE = "errorMessage";
     public static final String ATTRIBUTE_OAUTH_PROVIDER_TYPE = "oauthProviderType";
 
@@ -72,6 +71,7 @@ public class OAuthPortletFilter implements RenderFilter {
     private OAuthProviderType<?> oauthProviderType;
     private FilterConfig filterConfig;
     private AccessTokenValidation accessTokenValidation;
+
 
     @Override
     public void init(FilterConfig filterConfig) throws PortletException {
@@ -103,9 +103,11 @@ public class OAuthPortletFilter implements RenderFilter {
 
     }
 
+
     @Override
     public void destroy() {
     }
+
 
     @Override
     public void doFilter(RenderRequest request, RenderResponse response, FilterChain chain) throws IOException, PortletException {
@@ -130,17 +132,18 @@ public class OAuthPortletFilter implements RenderFilter {
             accessToken = validateAndSaveAccessToken(request, response, oauthProviderType, accessToken);
             if (accessToken != null) {
                 if (trace) {
-                    log.trace("Invoking handleRender with accessToken " + accessToken);
+                    log.trace("Invoking portlet render request with accessToken " + accessToken);
                 }
 
                 chain.doFilter(request, response);
 
                 if (trace) {
-                    log.trace("Finished handleRender");
+                    log.trace("Finished portlet render request");
                 }
             }
         }
     }
+
 
     protected AccessTokenContext getAccessTokenOrRedirectToObtainIt(String username, OAuthProviderType<?> oauthProviderType, RenderRequest request, RenderResponse response)
             throws IOException, PortletException {
@@ -160,8 +163,9 @@ public class OAuthPortletFilter implements RenderFilter {
         return accessToken;
     }
 
+
     protected AccessTokenContext validateAndSaveAccessToken(PortletRequest request, PortletResponse response, OAuthProviderType<?> oauthProviderType, AccessTokenContext accessToken) throws PortletException, IOException {
-        AccessTokenContext previousAccessToken = getAccessToken(request, response);
+        AccessTokenContext previousAccessToken = getLocalAccessToken(request, response);
 
         if (isValidationNeeded(accessToken, previousAccessToken)) {
             // Validate accessToken
@@ -194,17 +198,28 @@ public class OAuthPortletFilter implements RenderFilter {
         return accessToken;
     }
 
+
     protected OAuthProviderType<?> getOAuthProvider() {
         return oauthProviderType;
     }
 
-    protected AccessTokenContext getAccessToken(PortletRequest req, PortletResponse res) {
+
+    // Obtain accessToken from portlet session
+    protected AccessTokenContext getLocalAccessToken(PortletRequest req, PortletResponse res) {
         return (AccessTokenContext)req.getPortletSession().getAttribute(ATTRIBUTE_ACCESS_TOKEN);
     }
 
+
     protected void saveAccessToken(PortletRequest req, PortletResponse res, AccessTokenContext accessToken) {
         req.getPortletSession().setAttribute(ATTRIBUTE_ACCESS_TOKEN, accessToken);
+
+        // Update existing access token in DB if it's different from the validated access token
+        AccessTokenContext existingAccessToken = socialNetworkService.getOAuthAccessToken((OAuthProviderType)getOAuthProvider(), req.getRemoteUser());
+        if (accessToken != null && !accessToken.equals(existingAccessToken)) {
+            socialNetworkService.updateOAuthAccessToken((OAuthProviderType)getOAuthProvider(), req.getRemoteUser(), accessToken);
+        }
     }
+
 
     private boolean isValidationNeeded(AccessTokenContext accessToken, AccessTokenContext previousAccessToken) {
         if (accessTokenValidation == AccessTokenValidation.ALWAYS) {
