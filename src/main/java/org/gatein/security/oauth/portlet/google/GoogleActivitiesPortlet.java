@@ -24,7 +24,6 @@
 package org.gatein.security.oauth.portlet.google;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,11 +32,9 @@ import javax.portlet.PortletRequestDispatcher;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.services.plus.Plus;
 import com.google.api.services.plus.model.Activity;
 import com.google.api.services.plus.model.ActivityFeed;
-import com.google.api.services.plus.model.Comment;
 import com.google.api.services.plus.model.CommentFeed;
 import org.exoplatform.container.ExoContainer;
 import org.gatein.security.oauth.common.OAuthConstants;
@@ -67,19 +64,19 @@ public class GoogleActivitiesPortlet extends AbstractSocialPortlet<GoogleAccessT
 
     // See https://developers.google.com/+/api/latest/activities/list for details
     @Override
-    protected void handleRender(RenderRequest request, RenderResponse response, GoogleAccessTokenContext accessToken) throws PortletException, IOException {
+    protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, GoogleAccessTokenContext accessToken) throws PortletException, IOException {
         final Plus service = googleProcessor.getPlusService(accessToken);
         final Plus.Activities.List list  = service.activities().list("me", "public");
         list.setMaxResults(10L);
 
-        ActivityFeed activityFeed = new GoogleRequest<ActivityFeed>(request, response, getPortletContext(), getOAuthProvider(), REQUIRED_SCOPE) {
+        ActivityFeed activityFeed = new GooglePortletRequest<ActivityFeed>(request, response, getPortletContext(), getOAuthProvider(), REQUIRED_SCOPE) {
 
             @Override
-            protected ActivityFeed execute() throws IOException {
+            protected ActivityFeed invokeRequest() throws IOException {
                 return list.execute();
             }
 
-        }.sendRequest();
+        }.executeRequest();
 
         List<GoogleActivityBean> googleActivityBeanList = new ArrayList<GoogleActivityBean>();
 
@@ -87,14 +84,14 @@ public class GoogleActivitiesPortlet extends AbstractSocialPortlet<GoogleAccessT
             for (final Activity activity : activityFeed.getItems()) {
 
                 GoogleActivityBean gab = new GoogleActivityBean(activity);
-                CommentFeed comments = new GoogleRequest<CommentFeed>(request, response, getPortletContext(), getOAuthProvider(), REQUIRED_SCOPE) {
+                CommentFeed comments = new GooglePortletRequest<CommentFeed>(request, response, getPortletContext(), getOAuthProvider(), REQUIRED_SCOPE) {
 
                     @Override
-                    protected CommentFeed execute() throws IOException {
+                    protected CommentFeed invokeRequest() throws IOException {
                         return service.comments().list(activity.getId()).execute();
                     }
 
-                }.sendRequest();
+                }.executeRequest();
 
                 gab.setCommentFeed(comments);
 

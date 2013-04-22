@@ -45,7 +45,7 @@ import org.gatein.security.oauth.portlet.OAuthPortletFilter;
 /**
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
-public abstract class FacebookRequest<T> {
+public abstract class FacebookPortletRequest<T> {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -54,7 +54,7 @@ public abstract class FacebookRequest<T> {
     private final PortletContext portletContext;
     private final OAuthProviderType<FacebookAccessTokenContext> oauthProviderType;
 
-    FacebookRequest(RenderRequest request, RenderResponse response, PortletContext portletContext, OAuthProviderType<FacebookAccessTokenContext> oauthPrType) {
+    FacebookPortletRequest(RenderRequest request, RenderResponse response, PortletContext portletContext, OAuthProviderType<FacebookAccessTokenContext> oauthPrType) {
         this.request = request;
         this.response = response;
         this.portletContext = portletContext;
@@ -62,12 +62,12 @@ public abstract class FacebookRequest<T> {
     }
 
 
-    protected abstract T execute() throws OAuthException, FacebookException;
+    protected abstract T invokeRequest() throws OAuthException, FacebookException;
 
 
-    T sendRequest() throws IOException, PortletException {
+    public T executeRequest() throws IOException, PortletException {
         try {
-            return execute();
+            return invokeRequest();
         } catch (OAuthException oe) {
             String jspPage;
             if (oe.getExceptionCode() == OAuthExceptionCode.EXCEPTION_CODE_ACCESS_TOKEN_ERROR) {

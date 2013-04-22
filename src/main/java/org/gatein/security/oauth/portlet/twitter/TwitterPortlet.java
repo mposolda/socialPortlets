@@ -60,7 +60,7 @@ public class TwitterPortlet extends AbstractSocialPortlet<TwitterAccessTokenCont
     }
 
     @Override
-    protected void handleRender(RenderRequest request, RenderResponse response, TwitterAccessTokenContext accessToken) throws PortletException, IOException {
+    protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, TwitterAccessTokenContext accessToken) throws PortletException, IOException {
         Twitter twitter = gtnTwitterProcessor.getAuthorizedTwitterInstance(accessToken);
 
         User twitterUser = null;

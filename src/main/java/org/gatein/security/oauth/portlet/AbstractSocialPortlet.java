@@ -1,7 +1,6 @@
 package org.gatein.security.oauth.portlet;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -9,7 +8,6 @@ import javax.portlet.GenericPortlet;
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletSession;
-import javax.portlet.PortletURL;
 import javax.portlet.ProcessAction;
 import javax.portlet.PortletRequestDispatcher;
 import javax.portlet.RenderRequest;
@@ -111,21 +109,13 @@ public abstract class AbstractSocialPortlet<T extends AccessTokenContext> extend
         T accessToken = getAccessToken(request, response, oauthProviderType);
         if (accessToken != null) {
             if (trace) {
-                log.trace("Invoking handleRender with accessToken " + accessToken);
+                log.trace("Invoking doViewWithAccessToken with accessToken " + accessToken);
             }
-            handleRender(request, response, accessToken);
+            doViewWithAccessToken(request, response, accessToken);
             if (trace) {
-                log.trace("Finished handleRender");
+                log.trace("Finished doViewWithAccessToken");
             }
         }
-    }
-
-
-    // Intended to be used by subclasses
-    protected final void writeAndFinishResponse(String content, RenderResponse response) throws IOException {
-        PrintWriter writer = response.getWriter();
-        writer.println(content);
-        writer.close();
     }
 
 
@@ -209,6 +199,6 @@ public abstract class AbstractSocialPortlet<T extends AccessTokenContext> extend
      * @param response render response
      * @param accessToken non-null accessToken, which could be used to perform operations in given OAuth provider (Social network)
      */
-    protected abstract void handleRender(RenderRequest request, RenderResponse response, T accessToken)
+    protected abstract void doViewWithAccessToken(RenderRequest request, RenderResponse response, T accessToken)
             throws PortletException, IOException;
 }

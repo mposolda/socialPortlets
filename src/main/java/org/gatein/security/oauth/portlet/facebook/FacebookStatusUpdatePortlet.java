@@ -88,7 +88,7 @@ public class FacebookStatusUpdatePortlet extends AbstractSocialPortlet<FacebookA
 
 
     @Override
-    protected void handleRender(RenderRequest request, RenderResponse response, FacebookAccessTokenContext accessToken) throws IOException, PortletException {
+    protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, FacebookAccessTokenContext accessToken) throws IOException, PortletException {
         PortletSession session = request.getPortletSession();
 
         // Refresh form values in view

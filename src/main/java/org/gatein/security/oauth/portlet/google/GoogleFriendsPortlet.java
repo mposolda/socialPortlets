@@ -71,7 +71,7 @@ public class GoogleFriendsPortlet extends AbstractSocialPortlet<GoogleAccessToke
 
     // See https://developers.google.com/+/api/latest/people/list for details
     @Override
-    protected void handleRender(RenderRequest request, RenderResponse response, GoogleAccessTokenContext accessToken) throws PortletException, IOException {
+    protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, GoogleAccessTokenContext accessToken) throws PortletException, IOException {
 
         Plus service = googleProcessor.getPlusService(accessToken);
 
@@ -102,14 +102,14 @@ public class GoogleFriendsPortlet extends AbstractSocialPortlet<GoogleAccessToke
 
         list.setPageToken(pgState.getTokenOfCurrentPage());
 
-        PeopleFeed peopleFeed = new GoogleRequest<PeopleFeed>(request, response, getPortletContext(), getOAuthProvider(), REQUIRED_SCOPE) {
+        PeopleFeed peopleFeed = new GooglePortletRequest<PeopleFeed>(request, response, getPortletContext(), getOAuthProvider(), REQUIRED_SCOPE) {
 
             @Override
-            protected PeopleFeed execute() throws IOException {
+            protected PeopleFeed invokeRequest() throws IOException {
                 return list.execute();
             }
 
-        }.sendRequest();
+        }.executeRequest();
 
         if (peopleFeed != null) {
             List<Person> people = peopleFeed.getItems();

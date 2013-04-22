@@ -43,7 +43,7 @@ import org.gatein.security.oauth.portlet.OAuthPortletFilter;
 /**
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
-public abstract class GoogleRequest<T> {
+public abstract class GooglePortletRequest<T> {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -53,8 +53,8 @@ public abstract class GoogleRequest<T> {
     private final OAuthProviderType<GoogleAccessTokenContext> oauthProviderType;
     private final String requiredScope;
 
-    GoogleRequest(RenderRequest request, RenderResponse response, PortletContext portletContext,
-                  OAuthProviderType<GoogleAccessTokenContext> oauthPrType, String requiredScope) {
+    GooglePortletRequest(RenderRequest request, RenderResponse response, PortletContext portletContext,
+                         OAuthProviderType<GoogleAccessTokenContext> oauthPrType, String requiredScope) {
         this.request = request;
         this.response = response;
         this.portletContext = portletContext;
@@ -63,14 +63,14 @@ public abstract class GoogleRequest<T> {
     }
 
 
-    protected abstract T execute() throws IOException;
+    protected abstract T invokeRequest() throws IOException;
 
 
-    T sendRequest() throws PortletException, IOException {
+    public T executeRequest() throws PortletException, IOException {
         String jspErrorPage;
 
         try {
-            return execute();
+            return invokeRequest();
         } catch (GoogleJsonResponseException googleEx) {
             String message = oauthProviderType.getFriendlyName() + " access token is invalid or scope is insufficient.";
             if (requiredScope != null) {

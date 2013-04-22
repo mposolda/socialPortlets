@@ -25,22 +25,16 @@
 package org.gatein.security.oauth.portlet.facebook;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import javax.portlet.PortletRequestDispatcher;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import com.restfb.exception.FacebookException;
 import org.exoplatform.container.ExoContainer;
-import org.exoplatform.container.ExoContainerContext;
-import org.exoplatform.portal.webui.util.Util;
 import org.gatein.security.oauth.common.OAuthConstants;
 import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.data.SocialNetworkService;
 import org.gatein.security.oauth.exception.OAuthException;
 import org.gatein.security.oauth.facebook.FacebookAccessTokenContext;
 import org.gatein.security.oauth.facebook.GateInFacebookProcessor;
@@ -68,15 +62,15 @@ public class FacebookUserInfoPortlet extends AbstractSocialPortlet<FacebookAcces
 
 
     @Override
-    protected void handleRender(RenderRequest request, RenderResponse response, final FacebookAccessTokenContext accessToken) throws IOException, PortletException {
-        FacebookPrincipal principal = new FacebookRequest<FacebookPrincipal>(request, response, getPortletContext(), getOAuthProvider()) {
+    protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, final FacebookAccessTokenContext accessToken) throws IOException, PortletException {
+        FacebookPrincipal principal = new FacebookPortletRequest<FacebookPrincipal>(request, response, getPortletContext(), getOAuthProvider()) {
 
             @Override
-            protected FacebookPrincipal execute() throws OAuthException, FacebookException {
+            protected FacebookPrincipal invokeRequest() throws OAuthException, FacebookException {
                 return gtnFacebookProcessor.getPrincipal(accessToken.getAccessToken());
             }
 
-        }.sendRequest();
+        }.executeRequest();
 
         if (principal != null) {
             request.setAttribute("facebookUserInfo", principal);

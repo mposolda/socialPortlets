@@ -116,7 +116,7 @@
     <lifecycle>RENDER_PHASE</lifecycle>
     <init-param>
       <name>accessTokenValidation</name>
-      <value>SESSION</value>
+      <value>SKIP</value>
     </init-param>
     <init-param>
       <name>oauthProviderKey</name>
@@ -128,6 +128,7 @@
     <filter-name>GoogleFilter</filter-name>
     <filter-class>org.gatein.security.oauth.portlet.OAuthPortletFilter</filter-class>
     <lifecycle>RENDER_PHASE</lifecycle>
+    <!-- Validation are useful for Google due to refreshing access token -->
     <init-param>
       <name>accessTokenValidation</name>
       <value>SESSION</value>
@@ -144,7 +145,7 @@
     <lifecycle>RENDER_PHASE</lifecycle>
     <init-param>
       <name>accessTokenValidation</name>
-      <value>SESSION</value>
+      <value>SKIP</value>
     </init-param>
     <init-param>
       <name>oauthProviderKey</name>

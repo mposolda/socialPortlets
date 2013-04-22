@@ -202,40 +202,40 @@ public class FacebookClientWrapper {
 
 
     private <T> T fetchObject(final String object, final Class<T> objectType, final Parameter... parameters) throws PortletException, IOException {
-        FacebookRequest<T> facebookRequest = new FacebookRequest<T>(request, response, portletContext, oauthProviderType) {
+        FacebookPortletRequest<T> facebookRequest = new FacebookPortletRequest<T>(request, response, portletContext, oauthProviderType) {
 
             @Override
-            protected T execute() throws OAuthException, FacebookException {
+            protected T invokeRequest() throws OAuthException, FacebookException {
                 return facebookClient.fetchObject(object, objectType, parameters);
             }
         };
 
-        return facebookRequest.sendRequest();
+        return facebookRequest.executeRequest();
     }
 
 
     private <T> Connection<T> fetchConnection(final String connection, final Class<T> connectionType, final Parameter... parameters)
             throws PortletException, IOException {
-        FacebookRequest<Connection<T>> facebookRequest = new FacebookRequest<Connection<T>>(request, response, portletContext, oauthProviderType) {
+        FacebookPortletRequest<Connection<T>> facebookRequest = new FacebookPortletRequest<Connection<T>>(request, response, portletContext, oauthProviderType) {
 
             @Override
-            protected Connection<T> execute() throws OAuthException, FacebookException {
+            protected Connection<T> invokeRequest() throws OAuthException, FacebookException {
                 return facebookClient.fetchConnection(connection, connectionType, parameters);
             }
         };
 
-        return facebookRequest.sendRequest();
+        return facebookRequest.executeRequest();
     }
 
     private <T> T fetchObjects(final List<String> objects, final Class<T> objectType, final Parameter... parameters) throws PortletException, IOException {
-        FacebookRequest<T> facebookRequest = new FacebookRequest<T>(request, response, portletContext, oauthProviderType) {
+        FacebookPortletRequest<T> facebookRequest = new FacebookPortletRequest<T>(request, response, portletContext, oauthProviderType) {
 
             @Override
-            protected T execute() throws OAuthException, FacebookException {
+            protected T invokeRequest() throws OAuthException, FacebookException {
                 return facebookClient.fetchObjects(objects, objectType, parameters);
             }
         };
 
-        return facebookRequest.sendRequest();
+        return facebookRequest.executeRequest();
     }
 }
