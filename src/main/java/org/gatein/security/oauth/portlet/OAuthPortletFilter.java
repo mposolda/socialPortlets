@@ -95,7 +95,7 @@ public class OAuthPortletFilter implements RenderFilter {
         if (oauthProviderKey != null) {
             this.oauthProviderType = oauthProviderTypeRegistry.getOAuthProvider(oauthProviderKey);
             if (this.oauthProviderType == null) {
-                throw new PortletException("OAuth provider '" + oauthProviderKey + "' not found within registered OAuth providers");
+                log.warn("OAuth provider '" + oauthProviderKey + "' not found within registered OAuth providers");
             }
         } else {
             throw new PortletException("Init parameter '" + INIT_PARAM_OAUTH_PROVIDER_KEY + "' needs to be provided");
@@ -125,6 +125,13 @@ public class OAuthPortletFilter implements RenderFilter {
         }
 
         OAuthProviderType<?> oauthProviderType = getOAuthProvider();
+
+        if (oauthProviderType == null) {
+            request.setAttribute("providerName", filterConfig.getInitParameter(INIT_PARAM_OAUTH_PROVIDER_KEY));
+            PortletRequestDispatcher prd = filterConfig.getPortletContext().getRequestDispatcher("/jsp/error/providerUnavailable.jsp");
+            prd.include(request, response);
+            return;
+        }
 
 
         AccessTokenContext accessToken = getAccessTokenOrRedirectToObtainIt(username, oauthProviderType, request, response);
