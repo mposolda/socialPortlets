@@ -141,8 +141,6 @@ public class FacebookClientWrapper {
         // Render friends with their pictures
         if (idsOfFriendsToDisplay.size() > 0) {
             // Fetch all required friends with obtained ids
-            this.fetchObjects(idsOfFriendsToDisplay, JsonObject.class, Parameter.with("fields", "id,name,picture"));
-
             JsonObject friendsResult = this.fetchObjects(idsOfFriendsToDisplay, JsonObject.class, Parameter.with("fields", "id,name,picture"));
 
             if (friendsResult == null) {
