@@ -56,7 +56,7 @@ public class TwitterPortlet extends AbstractSocialPortlet<TwitterAccessTokenCont
 
     @Override
     protected OAuthProviderType<TwitterAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_TWITTER);
+        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_TWITTER, TwitterAccessTokenContext.class);
     }
 
     @Override

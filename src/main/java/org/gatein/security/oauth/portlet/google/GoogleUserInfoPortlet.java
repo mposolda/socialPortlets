@@ -57,7 +57,7 @@ public class GoogleUserInfoPortlet extends AbstractSocialPortlet<GoogleAccessTok
 
     @Override
     protected OAuthProviderType<GoogleAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_GOOGLE);
+        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_GOOGLE, GoogleAccessTokenContext.class);
     }
 
     @Override

@@ -59,7 +59,7 @@ public class GoogleActivitiesPortlet extends AbstractSocialPortlet<GoogleAccessT
 
     @Override
     protected OAuthProviderType<GoogleAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_GOOGLE);
+        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_GOOGLE, GoogleAccessTokenContext.class);
     }
 
     // See https://developers.google.com/+/api/latest/activities/list for details

@@ -57,7 +57,7 @@ public class FacebookUserInfoPortlet extends AbstractSocialPortlet<FacebookAcces
 
     @Override
     protected OAuthProviderType<FacebookAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_FACEBOOK);
+        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_FACEBOOK, FacebookAccessTokenContext.class);
     }
 
 
@@ -67,7 +67,7 @@ public class FacebookUserInfoPortlet extends AbstractSocialPortlet<FacebookAcces
 
             @Override
             protected FacebookPrincipal invokeRequest() throws OAuthException, FacebookException {
-                return gtnFacebookProcessor.getPrincipal(accessToken.getAccessToken());
+                return gtnFacebookProcessor.getPrincipal(accessToken);
             }
 
         }.executeRequest();

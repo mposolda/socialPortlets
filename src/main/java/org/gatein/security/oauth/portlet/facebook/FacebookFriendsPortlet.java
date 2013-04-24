@@ -80,7 +80,7 @@ public class FacebookFriendsPortlet extends AbstractSocialPortlet<FacebookAccess
 
     @Override
     protected OAuthProviderType<FacebookAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_FACEBOOK);
+        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_FACEBOOK, FacebookAccessTokenContext.class);
     }
 
     @Override

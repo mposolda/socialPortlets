@@ -93,9 +93,9 @@ public class OAuthPortletFilter implements RenderFilter {
 
         String oauthProviderKey = filterConfig.getInitParameter(INIT_PARAM_OAUTH_PROVIDER_KEY);
         if (oauthProviderKey != null) {
-            this.oauthProviderType = oauthProviderTypeRegistry.getOAuthProvider(oauthProviderKey);
+            this.oauthProviderType = oauthProviderTypeRegistry.getOAuthProvider(oauthProviderKey, AccessTokenContext.class);
             if (this.oauthProviderType == null) {
-                log.warn("OAuth provider '" + oauthProviderKey + "' not found within registered OAuth providers");
+                log.debug("OAuth provider '" + oauthProviderKey + "' not found within registered OAuth providers");
             }
         } else {
             throw new PortletException("Init parameter '" + INIT_PARAM_OAUTH_PROVIDER_KEY + "' needs to be provided");

@@ -197,7 +197,7 @@ public abstract class AbstractSocialPortlet<T extends AccessTokenContext> extend
      *
      * @param request render request
      * @param response render response
-     * @param accessToken non-null accessToken, which could be used to perform operations in given OAuth provider (Social network)
+     * @param accessToken non-null accessTokenContext, which could be used to perform operations in given OAuth provider (Social network)
      */
     protected abstract void doViewWithAccessToken(RenderRequest request, RenderResponse response, T accessToken)
             throws PortletException, IOException;

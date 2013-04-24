@@ -83,7 +83,7 @@ public class FacebookStatusUpdatePortlet extends AbstractSocialPortlet<FacebookA
 
     @Override
     protected OAuthProviderType<FacebookAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_FACEBOOK);
+        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_FACEBOOK, FacebookAccessTokenContext.class);
     }
 
 
