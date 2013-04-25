@@ -44,6 +44,8 @@ import org.gatein.security.oauth.google.GoogleProcessor;
 import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
 
 /**
+ * Simple portlet for displaying latest activities from your Google+ wall. It's read-only portlet.
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public class GoogleActivitiesPortlet extends AbstractSocialPortlet<GoogleAccessTokenContext> {

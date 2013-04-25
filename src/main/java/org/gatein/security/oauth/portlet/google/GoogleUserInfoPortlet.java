@@ -41,6 +41,8 @@ import org.gatein.security.oauth.google.GoogleProcessor;
 import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
 
 /**
+ * Very simple portlet for displaying basic information about logged Google user
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public class GoogleUserInfoPortlet extends AbstractSocialPortlet<GoogleAccessTokenContext> {

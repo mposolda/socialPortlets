@@ -49,6 +49,12 @@ import org.gatein.security.oauth.exception.OAuthExceptionCode;
 import org.gatein.security.oauth.registry.OAuthProviderTypeRegistry;
 
 /**
+ * Portlet filter, which is used to obtain access token for given user from portal DB and save it to portlet session. So portlets
+ * can simply read access token without need to obtain it.
+ *
+ * It also performs checks if access token is valid. In case that this user doesn't have access token or his access token is invalid/expired,
+ * the filter will redirect to error screen and user needs to authenticate through OAuth workflow to obtain correct access token
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public class OAuthPortletFilter implements RenderFilter {
@@ -152,12 +158,13 @@ public class OAuthPortletFilter implements RenderFilter {
     }
 
 
+    // Read access token from DB (SocialNetworkService) and display error message if it's not available
     protected AccessTokenContext getAccessTokenOrRedirectToObtainIt(String username, OAuthProviderType<?> oauthProviderType, RenderRequest request, RenderResponse response)
             throws IOException, PortletException {
         AccessTokenContext accessToken = socialNetworkService.getOAuthAccessToken(oauthProviderType, username);
 
         if (accessToken == null) {
-            // Will be processed by method actionRedirectToOAuthFlow
+            // Will be processed by method AbstractSocialPortlet.actionRedirectToOAuthFlow
             PortletURL actionURL = response.createActionURL();
             actionURL.setParameter(ActionRequest.ACTION_NAME, AbstractSocialPortlet.ACTION_OAUTH_REDIRECT);
 
@@ -170,7 +177,7 @@ public class OAuthPortletFilter implements RenderFilter {
         return accessToken;
     }
 
-
+    // Validate obtained access token with usage of concrete OAuthProviderProcessor and save it to session if it's valid
     protected AccessTokenContext validateAndSaveAccessToken(PortletRequest request, PortletResponse response, OAuthProviderType<?> oauthProviderType, AccessTokenContext accessToken) throws PortletException, IOException {
         AccessTokenContext previousAccessToken = getLocalAccessToken(request, response);
 
@@ -220,7 +227,8 @@ public class OAuthPortletFilter implements RenderFilter {
     protected void saveAccessToken(PortletRequest req, PortletResponse res, AccessTokenContext accessToken) {
         req.getPortletSession().setAttribute(ATTRIBUTE_ACCESS_TOKEN, accessToken);
 
-        // Update existing access token in DB if it's different from the validated access token
+        // Update existing access token in DB if it's different from the validated access token. It could be the case with Google when
+        // token could be refreshed.
         AccessTokenContext existingAccessToken = socialNetworkService.getOAuthAccessToken((OAuthProviderType)getOAuthProvider(), req.getRemoteUser());
         if (accessToken != null && !accessToken.equals(existingAccessToken)) {
             socialNetworkService.updateOAuthAccessToken((OAuthProviderType)getOAuthProvider(), req.getRemoteUser(), accessToken);

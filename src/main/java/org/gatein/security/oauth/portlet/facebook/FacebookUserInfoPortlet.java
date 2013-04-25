@@ -42,7 +42,7 @@ import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
 import org.gatein.security.oauth.social.FacebookPrincipal;
 
 /**
- * Very simple portlet for displaying basic information about Facebook user
+ * Very simple portlet for displaying basic information about logged Facebook user
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */

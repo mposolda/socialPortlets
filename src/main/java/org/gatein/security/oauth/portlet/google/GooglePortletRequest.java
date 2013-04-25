@@ -41,6 +41,8 @@ import org.gatein.security.oauth.google.GoogleAccessTokenContext;
 import org.gatein.security.oauth.portlet.OAuthPortletFilter;
 
 /**
+ * Wrapper against some operation call to Google+ backend. It provides especially error handling functionality
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public abstract class GooglePortletRequest<T> {

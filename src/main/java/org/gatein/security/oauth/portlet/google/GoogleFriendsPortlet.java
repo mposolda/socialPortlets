@@ -44,6 +44,8 @@ import org.gatein.security.oauth.google.GoogleProcessor;
 import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
 
 /**
+ * Simple portlet for displaying Google+ friends and their photos. It supports pagination. It's read-only portlet.
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public class GoogleFriendsPortlet extends AbstractSocialPortlet<GoogleAccessTokenContext> {

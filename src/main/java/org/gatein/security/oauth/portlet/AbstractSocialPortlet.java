@@ -28,6 +28,8 @@ import org.gatein.security.oauth.data.SocialNetworkService;
 import org.gatein.security.oauth.registry.OAuthProviderTypeRegistry;
 
 /**
+ * Base social portlet class, which handles basic function (Handle action for redirection to OAuth login etc)
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public abstract class AbstractSocialPortlet<T extends AccessTokenContext> extends GenericPortlet {
@@ -55,23 +57,6 @@ public abstract class AbstractSocialPortlet<T extends AccessTokenContext> extend
         afterInit(container);
     }
 
-
-    @Override
-    public void processAction(ActionRequest request, ActionResponse response) throws PortletException,
-            java.io.IOException {
-        // Just add some logging for now
-        String action = request.getParameter(ActionRequest.ACTION_NAME);
-        boolean trace = log.isTraceEnabled();
-        if (trace) {
-            log.trace("Invoked  processAction with action: " + action);
-        }
-
-        super.processAction(request, response);
-
-        if (trace) {
-            log.trace("Finished  processAction with action: " + action);
-        }
-    }
 
     @ProcessAction(name = ACTION_OAUTH_REDIRECT)
     public void actionRedirectToOAuthFlow(ActionRequest aReq, ActionResponse aResp) throws IOException {

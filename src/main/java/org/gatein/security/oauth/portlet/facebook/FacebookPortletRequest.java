@@ -43,6 +43,8 @@ import org.gatein.security.oauth.facebook.FacebookAccessTokenContext;
 import org.gatein.security.oauth.portlet.OAuthPortletFilter;
 
 /**
+ * Wrapper against some operation call to Facebook backend. It provides especially error handling functionality
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public abstract class FacebookPortletRequest<T> {
@@ -69,6 +71,7 @@ public abstract class FacebookPortletRequest<T> {
         try {
             return invokeRequest();
         } catch (OAuthException oe) {
+            // Catching exceptions from GateInFacebookProcessor calls
             String jspPage;
             if (oe.getExceptionCode() == OAuthExceptionCode.EXCEPTION_CODE_ACCESS_TOKEN_ERROR) {
                 request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, oauthProviderType.getFriendlyName() + " access token is invalid.");
@@ -86,6 +89,7 @@ public abstract class FacebookPortletRequest<T> {
             PortletRequestDispatcher prd = portletContext.getRequestDispatcher(jspPage);
             prd.include(request, response);
         } catch (FacebookException fe) {
+            // Catching exceptions from RestFB calls
             String jspPage;
             if (fe instanceof FacebookOAuthException) {
                 request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, oauthProviderType.getFriendlyName() + " access token is invalid.");

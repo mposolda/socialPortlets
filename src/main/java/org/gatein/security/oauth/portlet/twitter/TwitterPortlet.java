@@ -43,6 +43,9 @@ import twitter4j.TwitterException;
 import twitter4j.User;
 
 /**
+ * Portlet for showing some basic informations about user from Twitter (His name, picture, number of followers, last tweets etc)
+ * Portlet is read-only (doesn't support writing to Twitter)
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public class TwitterPortlet extends AbstractSocialPortlet<TwitterAccessTokenContext> {

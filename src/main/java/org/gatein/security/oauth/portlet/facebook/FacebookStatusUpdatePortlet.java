@@ -53,6 +53,8 @@ import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
 import org.gatein.security.oauth.portlet.OAuthPortletFilter;
 
 /**
+ * Portlet for sending status update on FB wall of logged user
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public class FacebookStatusUpdatePortlet extends AbstractSocialPortlet<FacebookAccessTokenContext> {
