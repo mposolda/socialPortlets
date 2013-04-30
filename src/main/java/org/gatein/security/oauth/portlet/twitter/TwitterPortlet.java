@@ -64,36 +64,21 @@ public class TwitterPortlet extends AbstractSocialPortlet<TwitterAccessTokenCont
 
     @Override
     protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, TwitterAccessTokenContext accessToken) throws PortletException, IOException {
-        Twitter twitter = gtnTwitterProcessor.getAuthorizedTwitterInstance(accessToken);
+        final Twitter twitter = gtnTwitterProcessor.getAuthorizedTwitterInstance(accessToken);
 
-        User twitterUser = null;
-        try {
-            twitterUser = twitter.verifyCredentials();
-        } catch (TwitterException te) {
-            handleException(request, response, te);
-        }
+        User twitterUser = new TwitterPortletRequest<User>(request, response, getPortletContext(), getOAuthProvider()) {
+
+            @Override
+            protected User invokeRequest() throws TwitterException {
+                return twitter.verifyCredentials();
+            }
+
+        }.executeRequest();
 
         if (twitterUser != null) {
             request.setAttribute("twitterUserInfo", twitterUser);
             PortletRequestDispatcher prd = getPortletContext().getRequestDispatcher("/jsp/twitter/userinfo.jsp");
             prd.include(request, response);
         }
-    }
-
-    private void handleException(RenderRequest request, RenderResponse response, TwitterException te) throws PortletException, IOException {
-        OAuthProviderType<TwitterAccessTokenContext> oauthProviderType = getOAuthProvider();
-
-        String jspErrorPage;
-        if (te.getStatusCode() == 401) {
-            request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, oauthProviderType.getFriendlyName() + " access token is invalid.");
-            request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER_TYPE, oauthProviderType);
-            jspErrorPage = "/jsp/error/token.jsp";
-        } else {
-            log.error(te);
-            jspErrorPage = "/jsp/error/io.jsp";
-        }
-
-        PortletRequestDispatcher prd = getPortletContext().getRequestDispatcher(jspErrorPage);
-        prd.include(request, response);
     }
 }

@@ -21,8 +21,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-
-package org.gatein.security.oauth.portlet.google;
+package org.gatein.security.oauth.portlet.twitter;
 
 import java.io.IOException;
 
@@ -32,64 +31,63 @@ import javax.portlet.PortletRequestDispatcher;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.restfb.exception.FacebookException;
+import com.restfb.exception.FacebookNetworkException;
+import com.restfb.exception.FacebookOAuthException;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
-import org.gatein.security.oauth.common.OAuthConstants;
 import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.google.GoogleAccessTokenContext;
+import org.gatein.security.oauth.exception.OAuthException;
+import org.gatein.security.oauth.exception.OAuthExceptionCode;
+import org.gatein.security.oauth.facebook.FacebookAccessTokenContext;
 import org.gatein.security.oauth.portlet.OAuthPortletFilter;
+import org.gatein.security.oauth.twitter.TwitterAccessTokenContext;
+import twitter4j.TwitterException;
 
 /**
- * Wrapper against some operation call to Google+ backend. It provides especially error handling functionality
+ * Wrapper against some operation call to Twitter backend. It provides especially error handling functionality
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
-public abstract class GooglePortletRequest<T> {
+public abstract class TwitterPortletRequest<T> {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
     private final RenderRequest request;
     private final RenderResponse response;
     private final PortletContext portletContext;
-    private final OAuthProviderType<GoogleAccessTokenContext> oauthProviderType;
-    private final String requiredScope;
+    private final OAuthProviderType<TwitterAccessTokenContext> oauthProviderType;
 
-    public GooglePortletRequest(RenderRequest request, RenderResponse response, PortletContext portletContext,
-                         OAuthProviderType<GoogleAccessTokenContext> oauthPrType, String requiredScope) {
+    public TwitterPortletRequest(RenderRequest request, RenderResponse response, PortletContext portletContext,
+                                 OAuthProviderType<TwitterAccessTokenContext> oauthPrType) {
         this.request = request;
         this.response = response;
         this.portletContext = portletContext;
         this.oauthProviderType = oauthPrType;
-        this.requiredScope = requiredScope;
     }
 
 
-    protected abstract T invokeRequest() throws IOException;
+    protected abstract T invokeRequest() throws TwitterException;
 
 
-    public T executeRequest() throws PortletException, IOException {
-        String jspErrorPage;
-
+    public T executeRequest() throws IOException, PortletException {
         try {
             return invokeRequest();
-        } catch (GoogleJsonResponseException googleEx) {
-            String message = oauthProviderType.getFriendlyName() + " access token is invalid or scope is insufficient.";
-            if (requiredScope != null) {
-                message = message + "You will need scope: " + requiredScope + "<br>";
-                request.setAttribute(OAuthConstants.PARAM_CUSTOM_SCOPE, requiredScope);
+        } catch (TwitterException te) {
+            String jspErrorPage;
+            if (te.getStatusCode() == 401) {
+                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, oauthProviderType.getFriendlyName() + " access token is invalid.");
+                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER_TYPE, oauthProviderType);
+                jspErrorPage = "/jsp/error/token.jsp";
+            } else {
+                log.error(te);
+                jspErrorPage = "/jsp/error/io.jsp";
             }
-            request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, message);
-            request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER_TYPE, oauthProviderType);
-            jspErrorPage = "/jsp/error/token.jsp";
-        } catch (IOException ioe) {
-            log.error(ioe);
-            jspErrorPage = "/jsp/error/io.jsp";
+
+            PortletRequestDispatcher prd = portletContext.getRequestDispatcher(jspErrorPage);
+            prd.include(request, response);
         }
 
-        PortletRequestDispatcher prd = portletContext.getRequestDispatcher(jspErrorPage);
-        prd.include(request, response);
         return null;
     }
-
 }

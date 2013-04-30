@@ -47,7 +47,7 @@ import org.gatein.security.oauth.portlet.OAuthPortletFilter;
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
-public abstract class FacebookPortletRequest<T> {
+abstract class FacebookPortletRequest<T> {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -56,7 +56,7 @@ public abstract class FacebookPortletRequest<T> {
     private final PortletContext portletContext;
     private final OAuthProviderType<FacebookAccessTokenContext> oauthProviderType;
 
-    FacebookPortletRequest(RenderRequest request, RenderResponse response, PortletContext portletContext, OAuthProviderType<FacebookAccessTokenContext> oauthPrType) {
+    public FacebookPortletRequest(RenderRequest request, RenderResponse response, PortletContext portletContext, OAuthProviderType<FacebookAccessTokenContext> oauthPrType) {
         this.request = request;
         this.response = response;
         this.portletContext = portletContext;
