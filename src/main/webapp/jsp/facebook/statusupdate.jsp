@@ -33,7 +33,9 @@ limitations under the License.
 
     <c:if test="${not empty param[fbStatus]}">
         <div class="socialMessage">
-            <h3 class="socialMessageErrorHeader">Error:</h3>
+            <c:if test="${param[fbStatus] != 'SUCCESS'}">
+                <h3 class="socialMessageErrorHeader">Error:</h3>
+            </c:if>
             <span class="socialMessageContent">
             <c:choose>
                 <c:when test="${param[fbStatus] == 'SUCCESS'}">

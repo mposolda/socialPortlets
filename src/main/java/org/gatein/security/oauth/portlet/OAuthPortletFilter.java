@@ -27,6 +27,7 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletRequestDispatcher;
@@ -34,6 +35,7 @@ import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
+import javax.portlet.filter.ActionFilter;
 import javax.portlet.filter.FilterChain;
 import javax.portlet.filter.FilterConfig;
 import javax.portlet.filter.RenderFilter;
@@ -54,7 +56,7 @@ import org.gatein.api.oauth.exception.OAuthApiExceptionCode;
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
-public class OAuthPortletFilter implements RenderFilter {
+public class OAuthPortletFilter implements ActionFilter, RenderFilter {
 
     public static final String ATTRIBUTE_ACCESS_TOKEN = "_attrAccessToken";
     public static final String ATTRIBUTE_ERROR_MESSAGE = "errorMessage";
@@ -129,11 +131,33 @@ public class OAuthPortletFilter implements RenderFilter {
         }
     }
 
+    @Override
+    public void doFilter(ActionRequest request, ActionResponse response, FilterChain chain) throws IOException, PortletException {
+        String username = request.getRemoteUser();
+        OAuthProvider oauthProvider = getOAuthProvider();
+        AccessToken accessToken;
+        if (username != null && oauthProvider != null) {
+            accessToken = oauthProvider.loadAccessToken(username);
+        } else {
+            accessToken = null;
+        }
+
+        if (oauthProvider != null) {
+            requestContext.saveOAuthInfo(oauthProvider, accessToken);
+        }
+
+        chain.doFilter(request, response);
+    }
+
 
     // Read access token from DB and display error message if it's not available
     protected AccessToken loadAccessTokenOrRedirectToObtainIt(String username, OAuthProvider oauthProvider, RenderRequest request, RenderResponse response)
             throws IOException, PortletException {
-        AccessToken accessToken = oauthProvider.loadAccessToken(username);
+        // Try requestContext first. Otherwise obtain OAuthProvider via API
+        AccessToken accessToken = requestContext.getAccessToken(oauthProviderKey);
+        if (accessToken == null) {
+            accessToken = oauthProvider.loadAccessToken(username);
+        }
 
         if (accessToken == null) {
             // Will be processed by method AbstractSocialPortlet.actionRedirectToOAuthFlow

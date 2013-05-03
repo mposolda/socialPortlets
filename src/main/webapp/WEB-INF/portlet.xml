@@ -113,6 +113,7 @@
   <filter>
     <filter-name>FacebookFilter</filter-name>
     <filter-class>org.gatein.security.oauth.portlet.OAuthPortletFilter</filter-class>
+    <lifecycle>ACTION_PHASE</lifecycle>
     <lifecycle>RENDER_PHASE</lifecycle>
     <init-param>
       <name>accessTokenValidation</name>
@@ -127,6 +128,7 @@
   <filter>
     <filter-name>GoogleFilter</filter-name>
     <filter-class>org.gatein.security.oauth.portlet.OAuthPortletFilter</filter-class>
+    <lifecycle>ACTION_PHASE</lifecycle>
     <lifecycle>RENDER_PHASE</lifecycle>
     <!-- Validation are useful for Google due to refreshing access token -->
     <init-param>
@@ -142,6 +144,7 @@
   <filter>
     <filter-name>TwitterFilter</filter-name>
     <filter-class>org.gatein.security.oauth.portlet.OAuthPortletFilter</filter-class>
+    <lifecycle>ACTION_PHASE</lifecycle>
     <lifecycle>RENDER_PHASE</lifecycle>
     <init-param>
       <name>accessTokenValidation</name>
