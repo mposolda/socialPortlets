@@ -47,34 +47,19 @@
       <artifactId>portlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
+
     <dependency>
-      <groupId>org.gatein.portal</groupId>
-      <artifactId>exo.portal.component.web.oauth-common</artifactId>
-      <version>${gatein.portal.version}</version>
+      <groupId>org.gatein.api</groupId>
+      <artifactId>gatein-api</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.gatein.portal</groupId>
-      <artifactId>exo.portal.webui.portal</artifactId>
-      <version>${gatein.portal.version}</version>
+      <groupId>javax.enterprise</groupId>
+      <artifactId>cdi-api</artifactId>
       <scope>provided</scope>
     </dependency>
+
     <!-- Google -->
-    <dependency>
-      <groupId>com.google.oauth-client</groupId>
-      <artifactId>google-oauth-client</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.google.api-client</groupId>
-      <artifactId>google-api-client</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.google.http-client</groupId>
-      <artifactId>google-http-client-jackson</artifactId>
-      <scope>provided</scope>
-    </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-plus</artifactId>
@@ -85,7 +70,13 @@
       <artifactId>google-api-services-oauth2</artifactId>
       <scope>provided</scope>
     </dependency>
-    <!-- Facebook dependencies (not provided for now as it's not needed in GateIn and so it's bundled in this portlet WAR -->
+    <!-- Twitter -->
+    <dependency>
+      <groupId>org.twitter4j</groupId>
+      <artifactId>twitter4j-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Facebook  (not provided for now as it's not needed in GateIn and so it's bundled in this portlet WAR) -->
     <dependency>
       <groupId>com.restfb</groupId>
       <artifactId>restfb</artifactId>

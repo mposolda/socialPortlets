@@ -31,49 +31,32 @@ import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import javax.portlet.PortletRequestDispatcher;
 
-import com.restfb.exception.FacebookException;
-import org.exoplatform.container.ExoContainer;
-import org.gatein.security.oauth.common.OAuthConstants;
-import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.exception.OAuthException;
-import org.gatein.security.oauth.facebook.FacebookAccessTokenContext;
-import org.gatein.security.oauth.facebook.GateInFacebookProcessor;
+import com.restfb.types.User;
+import org.gatein.api.oauth.AccessToken;
+import org.gatein.api.oauth.OAuthProviderAccessor;
 import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
-import org.gatein.security.oauth.social.FacebookPrincipal;
 
 /**
  * Very simple portlet for displaying basic information about logged Facebook user
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
-public class FacebookUserInfoPortlet extends AbstractSocialPortlet<FacebookAccessTokenContext> {
-
-    private GateInFacebookProcessor gtnFacebookProcessor;
+public class FacebookUserInfoPortlet extends AbstractSocialPortlet {
 
     @Override
-    protected void afterInit(ExoContainer container) {
-        this.gtnFacebookProcessor = (GateInFacebookProcessor)container.getComponentInstanceOfType(GateInFacebookProcessor.class);
+    protected String getOAuthProviderKey() {
+        return OAuthProviderAccessor.FACEBOOK;
     }
 
     @Override
-    protected OAuthProviderType<FacebookAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_FACEBOOK, FacebookAccessTokenContext.class);
-    }
+    protected void doView(RenderRequest request, RenderResponse response) throws IOException, PortletException {
+        AccessToken accessToken = getAccessToken();
+        final FacebookClientWrapper facebookClient = new FacebookClientWrapper(request, response, getPortletContext(), getOAuthProvider(), accessToken.getAccessToken());
 
+        User me = facebookClient.getMeWithDetails();
 
-    @Override
-    protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, final FacebookAccessTokenContext accessToken) throws IOException, PortletException {
-        FacebookPrincipal principal = new FacebookPortletRequest<FacebookPrincipal>(request, response, getPortletContext(), getOAuthProvider()) {
-
-            @Override
-            protected FacebookPrincipal invokeRequest() throws OAuthException, FacebookException {
-                return gtnFacebookProcessor.getPrincipal(accessToken);
-            }
-
-        }.executeRequest();
-
-        if (principal != null) {
-            request.setAttribute("facebookUserInfo", principal);
+        if (me != null) {
+            request.setAttribute("facebookUserInfo", me);
             PortletRequestDispatcher prd = getPortletContext().getRequestDispatcher("/jsp/facebook/userinfo.jsp");
             prd.include(request, response);
         }

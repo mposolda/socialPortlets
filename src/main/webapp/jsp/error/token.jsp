@@ -33,7 +33,7 @@ limitations under the License.
         ${errorMessage}
         Click
         <a href="${tokenUrl}">here</a>
-        to link your GateIn account with ${oauthProviderType.friendlyName} account.
+        to link your GateIn account with ${oauthProvider.friendlyName} account.
     </span>
 </div>
 

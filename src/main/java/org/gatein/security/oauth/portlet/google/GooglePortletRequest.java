@@ -33,11 +33,8 @@ import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import org.gatein.common.logging.Logger;
-import org.gatein.common.logging.LoggerFactory;
-import org.gatein.security.oauth.common.OAuthConstants;
-import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.google.GoogleAccessTokenContext;
+import org.gatein.api.oauth.OAuthProvider;
+import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
 import org.gatein.security.oauth.portlet.OAuthPortletFilter;
 
 /**
@@ -47,20 +44,18 @@ import org.gatein.security.oauth.portlet.OAuthPortletFilter;
  */
 public abstract class GooglePortletRequest<T> {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
-
     private final RenderRequest request;
     private final RenderResponse response;
     private final PortletContext portletContext;
-    private final OAuthProviderType<GoogleAccessTokenContext> oauthProviderType;
+    private final OAuthProvider oauthProvider;
     private final String requiredScope;
 
     public GooglePortletRequest(RenderRequest request, RenderResponse response, PortletContext portletContext,
-                         OAuthProviderType<GoogleAccessTokenContext> oauthPrType, String requiredScope) {
+                                OAuthProvider oauthPr, String requiredScope) {
         this.request = request;
         this.response = response;
         this.portletContext = portletContext;
-        this.oauthProviderType = oauthPrType;
+        this.oauthProvider = oauthPr;
         this.requiredScope = requiredScope;
     }
 
@@ -74,16 +69,16 @@ public abstract class GooglePortletRequest<T> {
         try {
             return invokeRequest();
         } catch (GoogleJsonResponseException googleEx) {
-            String message = oauthProviderType.getFriendlyName() + " access token is invalid or scope is insufficient.";
+            String message = oauthProvider.getFriendlyName() + " access token is invalid or scope is insufficient.";
             if (requiredScope != null) {
                 message = message + "You will need scope: " + requiredScope + "<br>";
-                request.setAttribute(OAuthConstants.PARAM_CUSTOM_SCOPE, requiredScope);
+                request.setAttribute(AbstractSocialPortlet.PARAM_CUSTOM_SCOPE, requiredScope);
             }
             request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, message);
-            request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER_TYPE, oauthProviderType);
+            request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
             jspErrorPage = "/jsp/error/token.jsp";
         } catch (IOException ioe) {
-            log.error(ioe);
+            System.err.println(ioe.getMessage());
             jspErrorPage = "/jsp/error/io.jsp";
         }
 

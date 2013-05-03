@@ -25,6 +25,7 @@ package org.gatein.security.oauth.portlet;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
 import javax.portlet.ActionRequest;
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
@@ -37,16 +38,12 @@ import javax.portlet.filter.FilterChain;
 import javax.portlet.filter.FilterConfig;
 import javax.portlet.filter.RenderFilter;
 
-import org.exoplatform.container.ExoContainer;
-import org.exoplatform.container.ExoContainerContext;
-import org.gatein.common.logging.Logger;
-import org.gatein.common.logging.LoggerFactory;
-import org.gatein.security.oauth.common.AccessTokenContext;
-import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.data.SocialNetworkService;
-import org.gatein.security.oauth.exception.OAuthException;
-import org.gatein.security.oauth.exception.OAuthExceptionCode;
-import org.gatein.security.oauth.registry.OAuthProviderTypeRegistry;
+import org.gatein.api.PortalRequest;
+import org.gatein.api.oauth.AccessToken;
+import org.gatein.api.oauth.OAuthProvider;
+import org.gatein.api.oauth.exception.OAuthApiException;
+import org.gatein.api.oauth.exception.OAuthApiExceptionCode;
+
 
 /**
  * Portlet filter, which is used to obtain access token for given user from portal DB and save it to portlet session. So portlets
@@ -59,11 +56,9 @@ import org.gatein.security.oauth.registry.OAuthProviderTypeRegistry;
  */
 public class OAuthPortletFilter implements RenderFilter {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
-
     public static final String ATTRIBUTE_ACCESS_TOKEN = "_attrAccessToken";
     public static final String ATTRIBUTE_ERROR_MESSAGE = "errorMessage";
-    public static final String ATTRIBUTE_OAUTH_PROVIDER_TYPE = "oauthProviderType";
+    public static final String ATTRIBUTE_OAUTH_PROVIDER = "oauthProvider";
 
     public static final String INIT_PARAM_ACCESS_TOKEN_VALIDATION = "accessTokenValidation";
     public static final String INIT_PARAM_OAUTH_PROVIDER_KEY = "oauthProviderKey";
@@ -72,19 +67,15 @@ public class OAuthPortletFilter implements RenderFilter {
         SKIP, SESSION, ALWAYS
     }
 
-    private SocialNetworkService socialNetworkService;
-    private OAuthProviderTypeRegistry oauthProviderTypeRegistry;
-    private OAuthProviderType<?> oauthProviderType;
     private FilterConfig filterConfig;
     private AccessTokenValidation accessTokenValidation;
+    private String oauthProviderKey;
 
+    @Inject
+    private RequestContext requestContext;
 
     @Override
     public void init(FilterConfig filterConfig) throws PortletException {
-        ExoContainer container = ExoContainerContext.getCurrentContainer();
-        this.socialNetworkService = (SocialNetworkService)container.getComponentInstanceOfType(SocialNetworkService.class);
-        this.oauthProviderTypeRegistry = (OAuthProviderTypeRegistry)container.getComponentInstanceOfType(OAuthProviderTypeRegistry.class);
-
         this.filterConfig = filterConfig;
 
         String accessTokenValidation = filterConfig.getInitParameter(INIT_PARAM_ACCESS_TOKEN_VALIDATION);
@@ -97,16 +88,10 @@ public class OAuthPortletFilter implements RenderFilter {
             this.accessTokenValidation = AccessTokenValidation.SESSION;
         }
 
-        String oauthProviderKey = filterConfig.getInitParameter(INIT_PARAM_OAUTH_PROVIDER_KEY);
-        if (oauthProviderKey != null) {
-            this.oauthProviderType = oauthProviderTypeRegistry.getOAuthProvider(oauthProviderKey, AccessTokenContext.class);
-            if (this.oauthProviderType == null) {
-                log.debug("OAuth provider '" + oauthProviderKey + "' not found within registered OAuth providers");
-            }
-        } else {
+        this.oauthProviderKey = filterConfig.getInitParameter(INIT_PARAM_OAUTH_PROVIDER_KEY);
+        if (oauthProviderKey == null) {
             throw new PortletException("Init parameter '" + INIT_PARAM_OAUTH_PROVIDER_KEY + "' needs to be provided");
         }
-
     }
 
 
@@ -117,11 +102,6 @@ public class OAuthPortletFilter implements RenderFilter {
 
     @Override
     public void doFilter(RenderRequest request, RenderResponse response, FilterChain chain) throws IOException, PortletException {
-        boolean trace = log.isTraceEnabled();
-        if (trace) {
-            log.trace("Invoked  doFilter");
-        }
-
         String username = request.getRemoteUser();
 
         if (username == null) {
@@ -130,46 +110,38 @@ public class OAuthPortletFilter implements RenderFilter {
             return;
         }
 
-        OAuthProviderType<?> oauthProviderType = getOAuthProvider();
+        OAuthProvider oauthProvider = getOAuthProvider();
 
-        if (oauthProviderType == null) {
-            request.setAttribute("providerName", filterConfig.getInitParameter(INIT_PARAM_OAUTH_PROVIDER_KEY));
+        if (oauthProvider == null) {
+            request.setAttribute("providerName", oauthProviderKey);
             PortletRequestDispatcher prd = filterConfig.getPortletContext().getRequestDispatcher("/jsp/error/providerUnavailable.jsp");
             prd.include(request, response);
             return;
         }
 
-
-        AccessTokenContext accessToken = getAccessTokenOrRedirectToObtainIt(username, oauthProviderType, request, response);
+        AccessToken accessToken = loadAccessTokenOrRedirectToObtainIt(username, oauthProvider, request, response);
         if (accessToken != null) {
-            accessToken = validateAndSaveAccessToken(request, response, oauthProviderType, accessToken);
+            accessToken = validateAccessToken(request, response, oauthProvider, accessToken);
             if (accessToken != null) {
-                if (trace) {
-                    log.trace("Invoking portlet render request with accessToken " + accessToken);
-                }
-
+                requestContext.saveOAuthInfo(oauthProvider, accessToken);
                 chain.doFilter(request, response);
-
-                if (trace) {
-                    log.trace("Finished portlet render request");
-                }
             }
         }
     }
 
 
-    // Read access token from DB (SocialNetworkService) and display error message if it's not available
-    protected AccessTokenContext getAccessTokenOrRedirectToObtainIt(String username, OAuthProviderType<?> oauthProviderType, RenderRequest request, RenderResponse response)
+    // Read access token from DB and display error message if it's not available
+    protected AccessToken loadAccessTokenOrRedirectToObtainIt(String username, OAuthProvider oauthProvider, RenderRequest request, RenderResponse response)
             throws IOException, PortletException {
-        AccessTokenContext accessToken = socialNetworkService.getOAuthAccessToken(oauthProviderType, username);
+        AccessToken accessToken = oauthProvider.loadAccessToken(username);
 
         if (accessToken == null) {
             // Will be processed by method AbstractSocialPortlet.actionRedirectToOAuthFlow
             PortletURL actionURL = response.createActionURL();
             actionURL.setParameter(ActionRequest.ACTION_NAME, AbstractSocialPortlet.ACTION_OAUTH_REDIRECT);
 
-            request.setAttribute(ATTRIBUTE_ERROR_MESSAGE, oauthProviderType.getFriendlyName() + " access token not available for you.");
-            request.setAttribute(ATTRIBUTE_OAUTH_PROVIDER_TYPE, oauthProviderType);
+            request.setAttribute(ATTRIBUTE_ERROR_MESSAGE, oauthProvider.getFriendlyName() + " access token not available for you.");
+            request.setAttribute(ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
             PortletRequestDispatcher prd = filterConfig.getPortletContext().getRequestDispatcher("/jsp/error/token.jsp");
             prd.include(request, response);
         }
@@ -177,22 +149,21 @@ public class OAuthPortletFilter implements RenderFilter {
         return accessToken;
     }
 
-    // Validate obtained access token with usage of concrete OAuthProviderProcessor and save it to session if it's valid
-    protected AccessTokenContext validateAndSaveAccessToken(PortletRequest request, PortletResponse response, OAuthProviderType<?> oauthProviderType, AccessTokenContext accessToken) throws PortletException, IOException {
-        AccessTokenContext previousAccessToken = getLocalAccessToken(request, response);
+    // Validate obtained access token with usage of concrete OAuthProvider and save it to session if it's valid
+    protected AccessToken validateAccessToken(PortletRequest request, PortletResponse response, OAuthProvider oauthProvider, AccessToken accessToken) throws PortletException, IOException {
+        AccessToken previousAccessToken = (AccessToken)request.getPortletSession().getAttribute(ATTRIBUTE_ACCESS_TOKEN);
 
         if (isValidationNeeded(accessToken, previousAccessToken)) {
             // Validate accessToken
             try {
-                accessToken = ((OAuthProviderType)getOAuthProvider()).getOauthProviderProcessor().validateTokenAndUpdateScopes(accessToken);
-            } catch (OAuthException oe) {
+                accessToken = getOAuthProvider().validateTokenAndUpdateScopes(accessToken);
+            } catch (OAuthApiException oe) {
                 String jspPage;
-                if (oe.getExceptionCode() == OAuthExceptionCode.EXCEPTION_CODE_ACCESS_TOKEN_ERROR) {
-                    request.setAttribute(ATTRIBUTE_ERROR_MESSAGE, oauthProviderType.getFriendlyName() + " access token is invalid.");
-                    request.setAttribute(ATTRIBUTE_OAUTH_PROVIDER_TYPE, oauthProviderType);
+                if (oe.getExceptionCode() == OAuthApiExceptionCode.ACCESS_TOKEN_ERROR) {
+                    request.setAttribute(ATTRIBUTE_ERROR_MESSAGE, oauthProvider.getFriendlyName() + " access token is invalid.");
+                    request.setAttribute(ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
                     jspPage = "/jsp/error/token.jsp";
-                } else if (oe.getExceptionCode() == OAuthExceptionCode.EXCEPTION_CODE_UNSPECIFIED_IO_ERROR) {
-                    log.error(oe);
+                } else if (oe.getExceptionCode() == OAuthApiExceptionCode.IO_ERROR) {
                     jspPage = "/jsp/error/io.jsp";
                 } else {
                     // Some unexpected error
@@ -203,40 +174,36 @@ public class OAuthPortletFilter implements RenderFilter {
                 prd.include(request, response);
                 return null;
             }
-        }
 
-        if (!accessToken.equals(previousAccessToken)) {
-            saveAccessToken(request, response, accessToken);
+            if (!accessToken.equals(previousAccessToken)) {
+                saveAccessToken(request, response, accessToken);
+            }
         }
 
         return accessToken;
     }
 
 
-    protected OAuthProviderType<?> getOAuthProvider() {
-        return oauthProviderType;
+    protected OAuthProvider getOAuthProvider() {
+        // Try requestContext first. Otherwise obtain OAuthProvider via API
+        OAuthProvider provider = requestContext.getOAuthProvider(oauthProviderKey);
+        return provider != null ? provider : PortalRequest.getInstance().getOAuthProviderAccessor().getOAuthProvider(oauthProviderKey);
     }
 
 
-    // Obtain accessToken from portlet session
-    protected AccessTokenContext getLocalAccessToken(PortletRequest req, PortletResponse res) {
-        return (AccessTokenContext)req.getPortletSession().getAttribute(ATTRIBUTE_ACCESS_TOKEN);
-    }
-
-
-    protected void saveAccessToken(PortletRequest req, PortletResponse res, AccessTokenContext accessToken) {
+    protected void saveAccessToken(PortletRequest req, PortletResponse res, AccessToken accessToken) {
         req.getPortletSession().setAttribute(ATTRIBUTE_ACCESS_TOKEN, accessToken);
 
         // Update existing access token in DB if it's different from the validated access token. It could be the case with Google when
         // token could be refreshed.
-        AccessTokenContext existingAccessToken = socialNetworkService.getOAuthAccessToken((OAuthProviderType)getOAuthProvider(), req.getRemoteUser());
+        AccessToken existingAccessToken = getOAuthProvider().loadAccessToken(req.getRemoteUser());
         if (accessToken != null && !accessToken.equals(existingAccessToken)) {
-            socialNetworkService.updateOAuthAccessToken((OAuthProviderType)getOAuthProvider(), req.getRemoteUser(), accessToken);
+            getOAuthProvider().saveAccessToken(req.getRemoteUser(), accessToken);
         }
     }
 
 
-    private boolean isValidationNeeded(AccessTokenContext accessToken, AccessTokenContext previousAccessToken) {
+    private boolean isValidationNeeded(AccessToken accessToken, AccessToken previousAccessToken) {
         if (accessTokenValidation == AccessTokenValidation.ALWAYS) {
             return true;
         } else if (accessTokenValidation == AccessTokenValidation.SKIP) {

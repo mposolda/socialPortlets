@@ -39,10 +39,8 @@ import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
 import com.restfb.types.NamedFacebookType;
-import org.exoplatform.container.ExoContainer;
-import org.gatein.security.oauth.common.OAuthConstants;
-import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.facebook.FacebookAccessTokenContext;
+import org.gatein.api.oauth.AccessToken;
+import org.gatein.api.oauth.OAuthProviderAccessor;
 import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
 
 /**
@@ -53,7 +51,7 @@ import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
-public class FacebookFriendsPortlet extends AbstractSocialPortlet<FacebookAccessTokenContext> {
+public class FacebookFriendsPortlet extends AbstractSocialPortlet {
 
     private static final String ATTR_FRIENDS_COUNT = "friendsCount";
     private static final String PARAM_PAGE = "_page";
@@ -80,21 +78,16 @@ public class FacebookFriendsPortlet extends AbstractSocialPortlet<FacebookAccess
     }
 
     @Override
-    protected void afterInit(ExoContainer container) {
+    protected String getOAuthProviderKey() {
+        return OAuthProviderAccessor.FACEBOOK;
     }
 
     @Override
-    protected OAuthProviderType<FacebookAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_FACEBOOK, FacebookAccessTokenContext.class);
-    }
-
-    @Override
-    protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, FacebookAccessTokenContext accessToken) throws IOException, PortletException {
-
+    protected void doView(RenderRequest request, RenderResponse response) throws IOException, PortletException {
         PortletSession session = request.getPortletSession();
-
         FacebookBean fb = new FacebookBean();
 
+        AccessToken accessToken = getAccessToken();
         FacebookClientWrapper facebookClient = new FacebookClientWrapper(request, response, getPortletContext(), getOAuthProvider(), accessToken.getAccessToken());
 
         // Obtain info about "me" including picture and render them

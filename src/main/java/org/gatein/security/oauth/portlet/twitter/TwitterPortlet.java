@@ -31,13 +31,9 @@ import javax.portlet.PortletRequestDispatcher;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import org.exoplatform.container.ExoContainer;
-import org.gatein.security.oauth.common.OAuthConstants;
-import org.gatein.security.oauth.common.OAuthProviderType;
+import org.gatein.api.oauth.AccessToken;
+import org.gatein.api.oauth.OAuthProviderAccessor;
 import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
-import org.gatein.security.oauth.portlet.OAuthPortletFilter;
-import org.gatein.security.oauth.twitter.TwitterAccessTokenContext;
-import org.gatein.security.oauth.twitter.TwitterProcessor;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.User;
@@ -48,23 +44,17 @@ import twitter4j.User;
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
-public class TwitterPortlet extends AbstractSocialPortlet<TwitterAccessTokenContext> {
-
-    private TwitterProcessor gtnTwitterProcessor;
+public class TwitterPortlet extends AbstractSocialPortlet {
 
     @Override
-    protected void afterInit(ExoContainer container) {
-        this.gtnTwitterProcessor = (TwitterProcessor) container.getComponentInstanceOfType(TwitterProcessor.class);
+    protected String getOAuthProviderKey() {
+        return OAuthProviderAccessor.TWITTER;
     }
 
     @Override
-    protected OAuthProviderType<TwitterAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_TWITTER, TwitterAccessTokenContext.class);
-    }
-
-    @Override
-    protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, TwitterAccessTokenContext accessToken) throws PortletException, IOException {
-        final Twitter twitter = gtnTwitterProcessor.getAuthorizedTwitterInstance(accessToken);
+    protected void doView(RenderRequest request, RenderResponse response) throws PortletException, IOException {
+        AccessToken accessToken = getAccessToken();
+        final Twitter twitter = getOAuthProvider().getAuthorizedSocialApiObject(accessToken, Twitter.class);
 
         User twitterUser = new TwitterPortletRequest<User>(request, response, getPortletContext(), getOAuthProvider()) {
 

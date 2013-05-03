@@ -33,11 +33,8 @@ import javax.portlet.RenderResponse;
 
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.model.Userinfo;
-import org.exoplatform.container.ExoContainer;
-import org.gatein.security.oauth.common.OAuthConstants;
-import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.google.GoogleAccessTokenContext;
-import org.gatein.security.oauth.google.GoogleProcessor;
+import org.gatein.api.oauth.AccessToken;
+import org.gatein.api.oauth.OAuthProviderAccessor;
 import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
 
 /**
@@ -45,32 +42,26 @@ import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
-public class GoogleUserInfoPortlet extends AbstractSocialPortlet<GoogleAccessTokenContext> {
-
-    private GoogleProcessor googleProcessor;
+public class GoogleUserInfoPortlet extends AbstractSocialPortlet {
 
     public static final String GOOGLE_USER_INFO = "googleUserInfo";
     private static String REQUIRED_SCOPE = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile";
 
     @Override
-    protected void afterInit(ExoContainer container) {
-        this.googleProcessor = (GoogleProcessor)container.getComponentInstanceOfType(GoogleProcessor.class);
+    protected String getOAuthProviderKey() {
+        return OAuthProviderAccessor.GOOGLE;
     }
 
     @Override
-    protected OAuthProviderType<GoogleAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_GOOGLE, GoogleAccessTokenContext.class);
-    }
-
-    @Override
-    protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, GoogleAccessTokenContext accessToken) throws PortletException, IOException {
-        final Oauth2 oauth2 = googleProcessor.getOAuth2Instance(accessToken);
+    protected void doView(RenderRequest request, RenderResponse response) throws PortletException, IOException {
+        AccessToken accessToken = getAccessToken();
+        final Oauth2 service = getOAuthProvider().getAuthorizedSocialApiObject(accessToken, Oauth2.class);
 
         Userinfo userInfo = new GooglePortletRequest<Userinfo>(request, response, getPortletContext(), getOAuthProvider(), REQUIRED_SCOPE) {
 
             @Override
             protected Userinfo invokeRequest() throws IOException {
-                return oauth2.userinfo().v2().me().get().execute();
+                return service.userinfo().v2().me().get().execute();
             }
 
         }.executeRequest();

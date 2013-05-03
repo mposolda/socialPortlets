@@ -34,12 +34,7 @@ import javax.portlet.RenderResponse;
 import com.restfb.exception.FacebookException;
 import com.restfb.exception.FacebookNetworkException;
 import com.restfb.exception.FacebookOAuthException;
-import org.gatein.common.logging.Logger;
-import org.gatein.common.logging.LoggerFactory;
-import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.exception.OAuthException;
-import org.gatein.security.oauth.exception.OAuthExceptionCode;
-import org.gatein.security.oauth.facebook.FacebookAccessTokenContext;
+import org.gatein.api.oauth.OAuthProvider;
 import org.gatein.security.oauth.portlet.OAuthPortletFilter;
 
 /**
@@ -49,58 +44,38 @@ import org.gatein.security.oauth.portlet.OAuthPortletFilter;
  */
 abstract class FacebookPortletRequest<T> {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
-
     private final RenderRequest request;
     private final RenderResponse response;
     private final PortletContext portletContext;
-    private final OAuthProviderType<FacebookAccessTokenContext> oauthProviderType;
+    private final OAuthProvider oauthProvider;
 
-    public FacebookPortletRequest(RenderRequest request, RenderResponse response, PortletContext portletContext, OAuthProviderType<FacebookAccessTokenContext> oauthPrType) {
+    public FacebookPortletRequest(RenderRequest request, RenderResponse response, PortletContext portletContext, OAuthProvider oauthPr) {
         this.request = request;
         this.response = response;
         this.portletContext = portletContext;
-        this.oauthProviderType = oauthPrType;
+        this.oauthProvider = oauthPr;
     }
 
 
-    protected abstract T invokeRequest() throws OAuthException, FacebookException;
+    protected abstract T invokeRequest() throws FacebookException;
 
 
     public T executeRequest() throws IOException, PortletException {
         try {
             return invokeRequest();
-        } catch (OAuthException oe) {
-            // Catching exceptions from GateInFacebookProcessor calls
-            String jspPage;
-            if (oe.getExceptionCode() == OAuthExceptionCode.EXCEPTION_CODE_ACCESS_TOKEN_ERROR) {
-                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, oauthProviderType.getFriendlyName() + " access token is invalid.");
-                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER_TYPE, oauthProviderType);
-                jspPage = "/jsp/error/token.jsp";
-            } else if (oe.getExceptionCode() == OAuthExceptionCode.EXCEPTION_CODE_UNSPECIFIED_IO_ERROR) {
-                log.error(oe);
-                jspPage = "/jsp/error/io.jsp";
-            } else {
-                // Do the same like with IO error for now
-                log.error(oe);
-                jspPage = "/jsp/error/io.jsp";
-            }
-
-            PortletRequestDispatcher prd = portletContext.getRequestDispatcher(jspPage);
-            prd.include(request, response);
         } catch (FacebookException fe) {
             // Catching exceptions from RestFB calls
             String jspPage;
             if (fe instanceof FacebookOAuthException) {
-                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, oauthProviderType.getFriendlyName() + " access token is invalid.");
-                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER_TYPE, oauthProviderType);
+                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, oauthProvider.getFriendlyName() + " access token is invalid.");
+                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
                 jspPage = "/jsp/error/token.jsp";
             } else if (fe instanceof FacebookNetworkException) {
-                log.error(fe);
+                System.err.println("IO error in FacebookPortletRequest: " + fe.getMessage());
                 jspPage = "/jsp/error/io.jsp";
             } else {
                 // Do the same like with IO error for now
-                log.error(fe);
+                System.err.println("IO error in FacebookPortletRequest: " + fe.getMessage());
                 jspPage = "/jsp/error/io.jsp";
             }
 

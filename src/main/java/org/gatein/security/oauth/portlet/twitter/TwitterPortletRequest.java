@@ -31,17 +31,8 @@ import javax.portlet.PortletRequestDispatcher;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import com.restfb.exception.FacebookException;
-import com.restfb.exception.FacebookNetworkException;
-import com.restfb.exception.FacebookOAuthException;
-import org.gatein.common.logging.Logger;
-import org.gatein.common.logging.LoggerFactory;
-import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.exception.OAuthException;
-import org.gatein.security.oauth.exception.OAuthExceptionCode;
-import org.gatein.security.oauth.facebook.FacebookAccessTokenContext;
+import org.gatein.api.oauth.OAuthProvider;
 import org.gatein.security.oauth.portlet.OAuthPortletFilter;
-import org.gatein.security.oauth.twitter.TwitterAccessTokenContext;
 import twitter4j.TwitterException;
 
 /**
@@ -51,19 +42,17 @@ import twitter4j.TwitterException;
  */
 public abstract class TwitterPortletRequest<T> {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
-
     private final RenderRequest request;
     private final RenderResponse response;
     private final PortletContext portletContext;
-    private final OAuthProviderType<TwitterAccessTokenContext> oauthProviderType;
+    private final OAuthProvider oauthProvider;
 
     public TwitterPortletRequest(RenderRequest request, RenderResponse response, PortletContext portletContext,
-                                 OAuthProviderType<TwitterAccessTokenContext> oauthPrType) {
+                                 OAuthProvider oauthProvider) {
         this.request = request;
         this.response = response;
         this.portletContext = portletContext;
-        this.oauthProviderType = oauthPrType;
+        this.oauthProvider = oauthProvider;
     }
 
 
@@ -76,11 +65,11 @@ public abstract class TwitterPortletRequest<T> {
         } catch (TwitterException te) {
             String jspErrorPage;
             if (te.getStatusCode() == 401) {
-                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, oauthProviderType.getFriendlyName() + " access token is invalid.");
-                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER_TYPE, oauthProviderType);
+                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, "Twitter access token is invalid.");
+                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
                 jspErrorPage = "/jsp/error/token.jsp";
             } else {
-                log.error(te);
+                System.err.println("Twitter error in TwitterPortletRequest: " + te.getMessage());
                 jspErrorPage = "/jsp/error/io.jsp";
             }
 

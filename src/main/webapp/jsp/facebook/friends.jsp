@@ -19,7 +19,6 @@ limitations under the License.
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ page import="java.util.Locale" %>
 <%@ page import="java.util.ResourceBundle" %>
-<%@ page import="org.gatein.security.oauth.common.OAuthConstants" %>
 <%@ page import="org.gatein.security.oauth.portlet.facebook.FacebookFriendsPortlet" %>
 <%@ page import="javax.portlet.ActionRequest" %>
 <%@ page trimDirectiveWhitespaces="true" %>

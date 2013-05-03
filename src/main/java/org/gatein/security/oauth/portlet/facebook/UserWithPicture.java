@@ -24,8 +24,6 @@
 
 package org.gatein.security.oauth.portlet.facebook;
 
-import javax.persistence.Transient;
-
 import com.restfb.Facebook;
 import com.restfb.types.NamedFacebookType;
 

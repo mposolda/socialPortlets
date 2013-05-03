@@ -22,7 +22,6 @@ limitations under the License.
 <%@ page import="org.gatein.security.oauth.portlet.facebook.FacebookStatusUpdatePortlet" %>
 <%@ page import="javax.portlet.ActionRequest" %>
 <%@ page import="org.gatein.security.oauth.portlet.AbstractSocialPortlet" %>
-<%@ page import="org.gatein.security.oauth.common.OAuthConstants" %>
 <%@ page trimDirectiveWhitespaces="true" %>
 
 <portlet:defineObjects/>
@@ -49,7 +48,7 @@ limitations under the License.
                     <portlet:actionURL var="privilegesUrl">
                         <portlet:param name="<%= ActionRequest.ACTION_NAME %>"
                                        value="<%= AbstractSocialPortlet.ACTION_OAUTH_REDIRECT %>"/>
-                        <portlet:param name="<%= OAuthConstants.PARAM_CUSTOM_SCOPE %>" value="publish_stream"/>
+                        <portlet:param name="<%= AbstractSocialPortlet.PARAM_CUSTOM_SCOPE %>" value="publish_stream"/>
                     </portlet:actionURL>
                     <br/>
                     Click <a href="${privilegesUrl}">here</a> to fix it.

@@ -40,9 +40,9 @@ import com.restfb.exception.FacebookException;
 import com.restfb.json.JsonObject;
 import com.restfb.types.NamedFacebookType;
 import com.restfb.types.StatusMessage;
-import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.exception.OAuthException;
-import org.gatein.security.oauth.facebook.FacebookAccessTokenContext;
+import com.restfb.types.User;
+import org.gatein.api.oauth.AccessToken;
+import org.gatein.api.oauth.OAuthProvider;
 
 /**
  * Wrapper around {@link FacebookClient}, which handles error situations
@@ -54,16 +54,16 @@ public class FacebookClientWrapper {
     private final RenderRequest request;
     private final RenderResponse response;
     private final PortletContext portletContext;
-    private final OAuthProviderType<FacebookAccessTokenContext> oauthProviderType;
+    private final OAuthProvider oauthProvider;
     private final FacebookClient facebookClient;
 
 
     FacebookClientWrapper(RenderRequest request, RenderResponse response, PortletContext portletContext,
-                          OAuthProviderType<FacebookAccessTokenContext> oauthPrType, String accessToken) {
+                          OAuthProvider oauthPr, String accessToken) {
         this.request = request;
         this.response = response;
         this.portletContext = portletContext;
-        this.oauthProviderType = oauthPrType;
+        this.oauthProvider = oauthPr;
         this.facebookClient = new DefaultFacebookClient(accessToken);
     }
 
@@ -73,6 +73,13 @@ public class FacebookClientWrapper {
      */
     public UserWithPicture getMe() throws IOException, PortletException {
         return this.fetchObject("me", UserWithPicture.class, Parameter.with("fields", "id,name,picture"));
+    }
+
+    /**
+     * @return Info about me (current user) with all the details (id, name, firstName, lastName, ...)
+     */
+    public User getMeWithDetails() throws IOException, PortletException {
+        return this.fetchObject("me", User.class, Parameter.with("fields", "id,name,username,firstName,lastName,gender,timezone,locale,email"));
     }
 
 
@@ -162,10 +169,10 @@ public class FacebookClientWrapper {
      *
      * @param friendId
      * @param myId This parameter is used only to recognize Facebook scope, which we need
-     * @param accessTokenContext
+     * @param accessToken
      * @return FacebookUserBean with filled status messages
      */
-    public FacebookUserBean getStatusesOfPerson(String friendId, String myId, FacebookAccessTokenContext accessTokenContext)
+    public FacebookUserBean getStatusesOfPerson(String friendId, String myId, AccessToken accessToken)
             throws PortletException, IOException {
         Connection<StatusMessage> statusMessageConnection = this.fetchConnection(friendId + "/statuses", StatusMessage.class, Parameter.with("limit", 5));
         if (statusMessageConnection == null) {
@@ -183,7 +190,7 @@ public class FacebookClientWrapper {
             // Different scope is needed for me and different for my friends
             String neededScope = friendId.equals(myId) ? "user_status" : "friends_status";
 
-            if (accessTokenContext.isScopeAvailable(neededScope)) {
+            if (accessToken.isScopeAvailable(neededScope)) {
                 ffb.setScope(true);
             } else {
                 ffb.setNeededScope(neededScope);
@@ -200,10 +207,10 @@ public class FacebookClientWrapper {
 
 
     private <T> T fetchObject(final String object, final Class<T> objectType, final Parameter... parameters) throws PortletException, IOException {
-        FacebookPortletRequest<T> facebookRequest = new FacebookPortletRequest<T>(request, response, portletContext, oauthProviderType) {
+        FacebookPortletRequest<T> facebookRequest = new FacebookPortletRequest<T>(request, response, portletContext, oauthProvider) {
 
             @Override
-            protected T invokeRequest() throws OAuthException, FacebookException {
+            protected T invokeRequest() throws FacebookException {
                 return facebookClient.fetchObject(object, objectType, parameters);
             }
         };
@@ -214,10 +221,10 @@ public class FacebookClientWrapper {
 
     private <T> Connection<T> fetchConnection(final String connection, final Class<T> connectionType, final Parameter... parameters)
             throws PortletException, IOException {
-        FacebookPortletRequest<Connection<T>> facebookRequest = new FacebookPortletRequest<Connection<T>>(request, response, portletContext, oauthProviderType) {
+        FacebookPortletRequest<Connection<T>> facebookRequest = new FacebookPortletRequest<Connection<T>>(request, response, portletContext, oauthProvider) {
 
             @Override
-            protected Connection<T> invokeRequest() throws OAuthException, FacebookException {
+            protected Connection<T> invokeRequest() throws FacebookException {
                 return facebookClient.fetchConnection(connection, connectionType, parameters);
             }
         };
@@ -226,10 +233,10 @@ public class FacebookClientWrapper {
     }
 
     private <T> T fetchObjects(final List<String> objects, final Class<T> objectType, final Parameter... parameters) throws PortletException, IOException {
-        FacebookPortletRequest<T> facebookRequest = new FacebookPortletRequest<T>(request, response, portletContext, oauthProviderType) {
+        FacebookPortletRequest<T> facebookRequest = new FacebookPortletRequest<T>(request, response, portletContext, oauthProvider) {
 
             @Override
-            protected T invokeRequest() throws OAuthException, FacebookException {
+            protected T invokeRequest() throws FacebookException {
                 return facebookClient.fetchObjects(objects, objectType, parameters);
             }
         };

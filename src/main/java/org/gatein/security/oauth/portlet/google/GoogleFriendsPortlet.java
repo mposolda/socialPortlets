@@ -25,7 +25,6 @@
 package org.gatein.security.oauth.portlet.google;
 
 import java.io.IOException;
-import java.util.List;
 
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -35,12 +34,8 @@ import javax.portlet.PortletRequestDispatcher;
 
 import com.google.api.services.plus.Plus;
 import com.google.api.services.plus.model.PeopleFeed;
-import com.google.api.services.plus.model.Person;
-import org.exoplatform.container.ExoContainer;
-import org.gatein.security.oauth.common.OAuthConstants;
-import org.gatein.security.oauth.common.OAuthProviderType;
-import org.gatein.security.oauth.google.GoogleAccessTokenContext;
-import org.gatein.security.oauth.google.GoogleProcessor;
+import org.gatein.api.oauth.AccessToken;
+import org.gatein.api.oauth.OAuthProviderAccessor;
 import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
 
 /**
@@ -48,7 +43,7 @@ import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
-public class GoogleFriendsPortlet extends AbstractSocialPortlet<GoogleAccessTokenContext> {
+public class GoogleFriendsPortlet extends AbstractSocialPortlet {
 
     private static final String ATTR_PAGINATION_CONTEXT = "paginationContext";
     private static final String PARAM_PAGE = "page";
@@ -56,26 +51,16 @@ public class GoogleFriendsPortlet extends AbstractSocialPortlet<GoogleAccessToke
     private static final String NEXT = "next";
     public static final String REQUIRED_SCOPE = "https://www.googleapis.com/auth/plus.login";
 
-    private GoogleProcessor googleProcessor;
-
-
     @Override
-    protected void afterInit(ExoContainer container) {
-        this.googleProcessor = (GoogleProcessor)container.getComponentInstanceOfType(GoogleProcessor.class);
+    protected String getOAuthProviderKey() {
+        return OAuthProviderAccessor.GOOGLE;
     }
-
-
-    @Override
-    protected OAuthProviderType<GoogleAccessTokenContext> getOAuthProvider() {
-        return getOauthProviderTypeRegistry().getOAuthProvider(OAuthConstants.OAUTH_PROVIDER_KEY_GOOGLE, GoogleAccessTokenContext.class);
-    }
-
 
     // See https://developers.google.com/+/api/latest/people/list for details
     @Override
-    protected void doViewWithAccessToken(RenderRequest request, RenderResponse response, GoogleAccessTokenContext accessToken) throws PortletException, IOException {
-
-        Plus service = googleProcessor.getPlusService(accessToken);
+    protected void doView(RenderRequest request, RenderResponse response) throws PortletException, IOException {
+        AccessToken accessToken = getAccessToken();
+        final Plus service = getOAuthProvider().getAuthorizedSocialApiObject(accessToken, Plus.class);
 
         final Plus.People.List list = service.people().list("me", "visible");
 
@@ -114,8 +99,6 @@ public class GoogleFriendsPortlet extends AbstractSocialPortlet<GoogleAccessToke
         }.executeRequest();
 
         if (peopleFeed != null) {
-            List<Person> people = peopleFeed.getItems();
-
             request.setAttribute("googleFriendsList", peopleFeed);
             request.setAttribute("pgState", pgState);
 
