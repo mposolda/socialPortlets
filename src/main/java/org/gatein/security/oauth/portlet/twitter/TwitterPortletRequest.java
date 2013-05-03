@@ -69,10 +69,10 @@ public abstract class TwitterPortletRequest<T> {
                 request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
                 jspErrorPage = "/jsp/error/token.jsp";
             } else {
-                System.err.println("Twitter error in TwitterPortletRequest: " + te.getMessage());
                 jspErrorPage = "/jsp/error/io.jsp";
             }
 
+            System.err.println("Twitter error occured: " + te.getMessage());
             PortletRequestDispatcher prd = portletContext.getRequestDispatcher(jspErrorPage);
             prd.include(request, response);
         }

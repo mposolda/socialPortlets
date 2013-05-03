@@ -71,14 +71,12 @@ abstract class FacebookPortletRequest<T> {
                 request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
                 jspPage = "/jsp/error/token.jsp";
             } else if (fe instanceof FacebookNetworkException) {
-                System.err.println("IO error in FacebookPortletRequest: " + fe.getMessage());
                 jspPage = "/jsp/error/io.jsp";
             } else {
                 // Do the same like with IO error for now
-                System.err.println("IO error in FacebookPortletRequest: " + fe.getMessage());
                 jspPage = "/jsp/error/io.jsp";
             }
-
+            System.err.println("Error occured. Type: " + fe.getClass() + ", message: " + fe.getMessage());
             PortletRequestDispatcher prd = portletContext.getRequestDispatcher(jspPage);
             prd.include(request, response);
         }

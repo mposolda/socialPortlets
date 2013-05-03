@@ -79,7 +79,7 @@ public class FacebookClientWrapper {
      * @return Info about me (current user) with all the details (id, name, firstName, lastName, ...)
      */
     public User getMeWithDetails() throws IOException, PortletException {
-        return this.fetchObject("me", User.class, Parameter.with("fields", "id,name,username,firstName,lastName,gender,timezone,locale,email"));
+        return this.fetchObject("me", User.class, Parameter.with("fields", "id,name,username,first_name,last_name,gender,timezone,locale,email"));
     }
 
 

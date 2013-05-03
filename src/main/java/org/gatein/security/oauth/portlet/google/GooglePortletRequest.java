@@ -76,9 +76,10 @@ public abstract class GooglePortletRequest<T> {
             }
             request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, message);
             request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
+            System.err.println("Received error from google. Type: " + googleEx.getClass() + ", message: " + googleEx.getMessage());
             jspErrorPage = "/jsp/error/token.jsp";
         } catch (IOException ioe) {
-            System.err.println(ioe.getMessage());
+            System.err.println("Received IO error from google. Type: " + ioe.getClass() + ", message: " + ioe.getMessage());
             jspErrorPage = "/jsp/error/io.jsp";
         }
 
