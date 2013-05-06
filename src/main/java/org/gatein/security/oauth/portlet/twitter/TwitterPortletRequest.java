@@ -69,14 +69,23 @@ public abstract class TwitterPortletRequest<T> {
                 request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
                 jspErrorPage = "/jsp/error/token.jsp";
             } else {
-                jspErrorPage = "/jsp/error/io.jsp";
+                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, getErrorMessage(te));
+                jspErrorPage = "/jsp/error/error.jsp";
             }
 
-            System.err.println("Twitter error occured: " + te.getMessage());
+            System.err.println(getErrorMessage(te));
             PortletRequestDispatcher prd = portletContext.getRequestDispatcher(jspErrorPage);
             prd.include(request, response);
         }
 
         return null;
+    }
+
+    private String getErrorMessage(TwitterException te) {
+        String errorMessage =  "Twitter error occured. StatusCode: " + te.getStatusCode() + ", Details: " + te.getMessage();
+        if (te.getCause() != null) {
+            errorMessage = errorMessage + ", Cause: " + te.getCause();
+        }
+        return errorMessage;
     }
 }

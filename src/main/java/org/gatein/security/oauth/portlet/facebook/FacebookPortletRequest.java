@@ -63,21 +63,27 @@ abstract class FacebookPortletRequest<T> {
     public T executeRequest() throws IOException, PortletException {
         try {
             return invokeRequest();
-        } catch (FacebookException fe) {
-            // Catching exceptions from RestFB calls
+        } catch (FacebookOAuthException foe) {
+            String exMessage = foe.getErrorCode() + " - " + foe.getErrorType() + " - " + foe.getErrorMessage();
+            System.err.println(exMessage);
+
             String jspPage;
-            if (fe instanceof FacebookOAuthException) {
+            if (foe.getErrorCode() == 190 || foe.getErrorCode() >= 200 && foe.getErrorCode() <=299) {
+                // Token error occured
                 request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, oauthProvider.getFriendlyName() + " access token is invalid.");
                 request.setAttribute(OAuthPortletFilter.ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
                 jspPage = "/jsp/error/token.jsp";
-            } else if (fe instanceof FacebookNetworkException) {
-                jspPage = "/jsp/error/io.jsp";
             } else {
-                // Do the same like with IO error for now
-                jspPage = "/jsp/error/io.jsp";
+                request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, "Error occured when calling Facebook operation. Details: " + exMessage);
+                jspPage = "/jsp/error/error.jsp";
             }
-            System.err.println("Error occured. Type: " + fe.getClass() + ", message: " + fe.getMessage());
             PortletRequestDispatcher prd = portletContext.getRequestDispatcher(jspPage);
+            prd.include(request, response);
+        } catch (FacebookNetworkException fne) {
+            String exMessage = "Network error when connecting with Facebook: " + fne.getMessage();
+            System.err.println(exMessage);
+            request.setAttribute(OAuthPortletFilter.ATTRIBUTE_ERROR_MESSAGE, exMessage);
+            PortletRequestDispatcher prd = portletContext.getRequestDispatcher("/jsp/error/error.jsp");
             prd.include(request, response);
         }
 

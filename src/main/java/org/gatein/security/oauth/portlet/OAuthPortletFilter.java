@@ -107,7 +107,8 @@ public class OAuthPortletFilter implements ActionFilter, RenderFilter {
         String username = request.getRemoteUser();
 
         if (username == null) {
-            PortletRequestDispatcher prd = filterConfig.getPortletContext().getRequestDispatcher("/jsp/error/anonymous.jsp");
+            request.setAttribute(ATTRIBUTE_ERROR_MESSAGE, "No content available for anonymous user. You need to login first.");
+            PortletRequestDispatcher prd = filterConfig.getPortletContext().getRequestDispatcher("/jsp/error/error.jsp");
             prd.include(request, response);
             return;
         }
@@ -115,8 +116,9 @@ public class OAuthPortletFilter implements ActionFilter, RenderFilter {
         OAuthProvider oauthProvider = getOAuthProvider();
 
         if (oauthProvider == null) {
-            request.setAttribute("providerName", oauthProviderKey);
-            PortletRequestDispatcher prd = filterConfig.getPortletContext().getRequestDispatcher("/jsp/error/providerUnavailable.jsp");
+            String errorMessage = "OAuth provider '" + oauthProviderKey + "' not available";
+            request.setAttribute(ATTRIBUTE_ERROR_MESSAGE, errorMessage);
+            PortletRequestDispatcher prd = filterConfig.getPortletContext().getRequestDispatcher("/jsp/error/error.jsp");
             prd.include(request, response);
             return;
         }
@@ -188,7 +190,9 @@ public class OAuthPortletFilter implements ActionFilter, RenderFilter {
                     request.setAttribute(ATTRIBUTE_OAUTH_PROVIDER, oauthProvider);
                     jspPage = "/jsp/error/token.jsp";
                 } else if (oe.getExceptionCode() == OAuthApiExceptionCode.IO_ERROR) {
-                    jspPage = "/jsp/error/io.jsp";
+                    oe.printStackTrace();
+                    request.setAttribute(ATTRIBUTE_ERROR_MESSAGE, "I/O error happened. See server.log for more details");
+                    jspPage = "/jsp/error/error.jsp";
                 } else {
                     // Some unexpected error
                     throw new PortletException(oe);
