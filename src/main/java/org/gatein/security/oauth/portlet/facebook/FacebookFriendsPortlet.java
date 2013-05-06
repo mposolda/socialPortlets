@@ -47,7 +47,7 @@ import org.gatein.security.oauth.portlet.AbstractSocialPortlet;
  * Show friends of logged user on Facebook and displays their pictures. It has support for pagination. It has possibility to show
  * last statuses from FB wall of friends or from the FB wall of logged user
  *
- * This portlet is read-only
+ * <p>This portlet is read-only</p>
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */

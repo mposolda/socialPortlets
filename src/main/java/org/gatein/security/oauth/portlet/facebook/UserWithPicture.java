@@ -28,6 +28,8 @@ import com.restfb.Facebook;
 import com.restfb.types.NamedFacebookType;
 
 /**
+ * Holder of basic info about Facebook user including his id, name and picture
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public class UserWithPicture extends NamedFacebookType {

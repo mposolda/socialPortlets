@@ -95,8 +95,8 @@ public class FacebookClientWrapper {
     /**
      * Filter string, which will be used for filtering of users by "contains" rule.
      *
-     * For example: You have 3 friends on Facebook with names: "John Woo", "Marc Boo", "Susie Cole" and filter will be "oo"
-     * Then output of this method will return "John Woo" and "Marc Boo"
+     * <p>For example: You have 3 friends on Facebook with names: "John Woo", "Marc Boo", "Susie Cole" and filter will be "oo"
+     * Then output of this method will return "John Woo" and "Marc Boo"</p>
      *
      * @param filter Filter string, which will be used for filtering of users by "contains" rule. For example
      * @return ids of filtered friends
@@ -121,6 +121,7 @@ public class FacebookClientWrapper {
 
     /**
      * get Page of friends according to given offset and limit
+     *
      * @param offset
      * @param limit
      * @return friends starting from offset and number of returned friends will be limit

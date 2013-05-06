@@ -32,6 +32,8 @@ import org.gatein.api.oauth.AccessToken;
 import org.gatein.api.oauth.OAuthProvider;
 
 /**
+ * Request scoped object holding all needed OAuth info. It's initialized by {@link OAuthPortletFilter} and then used by portlets
+ *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 @RequestScoped

@@ -48,11 +48,11 @@ import org.gatein.api.oauth.exception.OAuthApiExceptionCode;
 
 
 /**
- * Portlet filter, which is used to obtain access token for given user from portal DB and save it to portlet session. So portlets
- * can simply read access token without need to obtain it.
+ * Portlet filter, which is used to obtain access token for given user from portal DB and save it to CDI request scoped object.
+ * of type {@link RequestContext}. So portlets can simply read access token without need to obtain it again.
  *
- * It also performs checks if access token is valid. In case that this user doesn't have access token or his access token is invalid/expired,
- * the filter will redirect to error screen and user needs to authenticate through OAuth workflow to obtain correct access token
+ * <p>It also performs checks if access token is valid. In case that this user doesn't have access token or his access token is invalid/expired,
+ * the filter will redirect to error screen and user needs to authenticate through OAuth workflow to obtain correct access token</p>
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
@@ -176,7 +176,8 @@ public class OAuthPortletFilter implements ActionFilter, RenderFilter {
     }
 
     // Validate obtained access token with usage of concrete OAuthProvider and save it to session if it's valid
-    protected AccessToken validateAccessToken(PortletRequest request, PortletResponse response, OAuthProvider oauthProvider, AccessToken accessToken) throws PortletException, IOException {
+    protected AccessToken validateAccessToken(PortletRequest request, PortletResponse response, OAuthProvider oauthProvider,
+                                              AccessToken accessToken) throws PortletException, IOException {
         AccessToken previousAccessToken = (AccessToken)request.getPortletSession().getAttribute(ATTRIBUTE_ACCESS_TOKEN);
 
         if (isValidationNeeded(accessToken, previousAccessToken)) {

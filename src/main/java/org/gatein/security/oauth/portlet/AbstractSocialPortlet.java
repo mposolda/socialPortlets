@@ -13,7 +13,7 @@ import org.gatein.api.oauth.AccessToken;
 import org.gatein.api.oauth.OAuthProvider;
 
 /**
- * Base social portlet class, which handles basic function (Handle action for redirection to OAuth login etc)
+ * Base social portlet class
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
@@ -25,6 +25,13 @@ public abstract class AbstractSocialPortlet extends GenericPortlet {
     @Inject
     private RequestContext requestContext;
 
+    /**
+     * Perform redirection to OAuth workflow of given OAuth provider
+     *
+     * @param aReq action request
+     * @param aResp action response
+     * @throws IOException in case that OAuth workflow redirection failed
+     */
     @ProcessAction(name = ACTION_OAUTH_REDIRECT)
     public void actionRedirectToOAuthFlow(ActionRequest aReq, ActionResponse aResp) throws IOException {
         String customScope = aReq.getParameter(PARAM_CUSTOM_SCOPE);
